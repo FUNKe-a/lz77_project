@@ -1,6 +1,6 @@
 use std::env;
 use std::fs::File;
-use std::io::{self, BufReader, Read};
+use std::io::BufReader;
 
 pub fn open_file_buffer(chunk_size: usize) -> BufReader<File> {
     let args: Vec<String> = env::args().collect();
