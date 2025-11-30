@@ -1,36 +1,69 @@
-struct SlidingWindow {
-    window: Box<[u8]>,
-    search_len: usize,
-    lookahead_len: usize,
-    pos: usize,
+#[derive(Copy, Clone, Debug)]
+pub enum Token {
+    Empty(u8),
+    Offset { offset: u16, length: u8 },
 }
 
-impl SlidingWindow {
-    pub fn new(window_size: usize, search_len: usize) -> SlidingWindow {
-        let lookahead_len = window_size - search_len;
-        SlidingWindow {
-            window: vec![0u8; window_size].into_boxed_slice(),
-            search_len,
-            lookahead_len,
-            pos: search_len,
+fn find_longest_match(data: &[u8], pos: usize) -> Token {
+    let mut best_offset = 0u16;
+    let mut best_len = 0u8;
+    let start = if pos > u16::MAX as usize {
+        pos - u16::MAX as usize
+    } else {
+        0
+    };
+
+    for offset in start..pos {
+        let len = matcher(data, offset, pos);
+        if len > best_len {
+            best_offset = (pos - (offset as usize)) as u16;
+            best_len = len;
         }
     }
 
-    pub fn slide(&mut self, n: usize) {
-        if n == 0 { return; }
-        let len = self.pos;
-        self.window.copy_within(n..len, 0);
-        self.pos -= n;
+    if best_offset == 0 {
+        return Token::Empty(data[pos]);
     }
 
-    pub fn refill(&mut self, data: &[u8]) -> usize {
-        let available = self.window.len() - self.pos;
-        let to_copy = data.len().min(available);
-
-        self.window[self.pos..self.pos + to_copy]
-            .copy_from_slice(&data[..to_copy]);
-        self.pos += to_copy;
-
-        to_copy
+    Token::Offset {
+        offset: best_offset,
+        length: best_len,
     }
+}
+
+fn matcher(data: &[u8], offset: usize, end: usize) -> u8 {
+    let mut offset = offset;
+    let mut pos = end;
+    let mut len = 0u8;
+
+    while offset < pos && pos < data.len() && data[offset] == data[pos] && len < 255 {
+        offset += 1;
+        pos += 1;
+        len += 1;
+    }
+
+    return len;
+}
+
+pub fn compress(data: &[u8]) -> Vec<Token> {
+    let mut tokens: Vec<Token> = Vec::new();
+    let mut pos = 0;
+
+    while pos < data.len() {
+        let token = find_longest_match(data, pos);
+        tokens.push(token);
+
+        println!("{:?}", token);
+
+        match token {
+            Token::Empty(_) => {
+                pos += 1;
+            }
+            Token::Offset { offset: _, length } => {
+                pos += length as usize;
+            }
+        }
+    }
+
+    tokens
 }
