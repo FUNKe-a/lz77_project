@@ -1,9 +1,9 @@
 use clap::{Parser, ValueEnum};
 use rayon::prelude::*;
 use std::fs;
+use inzinerinis_projektas::*;
 
 mod input_output;
-mod lz_77;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -31,27 +31,27 @@ fn main() {
     let data = fs::read(&cli.input).unwrap();
     let chunks: Vec<&[u8]> = data.chunks(cli.chunk_size).collect();
     let mut res: Vec<u8> = Vec::new();
+
     match cli.mode {
         Mode::Singlethreaded => {
             // let mut reader = input_output::open_file_buffer(&cli.input, cli.io_chunk_size);
             // let mut buffer = vec![0u8; cli.io_chunk_size];
 
             for chunk in chunks {
-                let mut comp_chunk;
-                comp_chunk = lz_77::compress(&chunk);
+                let mut comp_chunk = compress(&chunk);
                 res.append(&mut comp_chunk);
             }
         },
         Mode::Multithreaded => {
             let comp_chunks = chunks
                 .par_iter()
-                .map(|chunk| lz_77::compress(chunk))
+                .map(|chunk| compress(chunk))
                 .collect::<Vec<Vec<u8>>>();
 
             for chunk in comp_chunks { res.extend(chunk); }
         },
         Mode::Decompress => {
-            res = lz_77::decompress(&data);
+            res = decompress(&data);
         },
     }
 
