@@ -1,7 +1,11 @@
 [package]
-name = "inzinerinis_projektas"
+name = "lz77_project"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
+description = "a limited implementation of the LZ77 algorithm for learning purposes"
+homepage = "https://github.com/FUNKe-a/lz77_project"
+repository = "https://github.com/FUNKe-a/lz77_project"
 
 [dependencies]
 rayon = "1.11.0"

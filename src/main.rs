@@ -1,9 +1,8 @@
 use clap::{Parser, ValueEnum};
+use lz77_project::*;
 use rayon::prelude::*;
-use std::fs;
-use inzinerinis_projektas::*;
-
-mod input_output;
+use std::fs::{self, File};
+use std::io::Write;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -28,32 +27,44 @@ enum Mode {
 fn main() {
     let cli = Cli::parse();
 
-    let data = fs::read(&cli.input).unwrap();
+    let data = match fs::read(&cli.input) {
+        Ok(data) => data,
+        Err(error) => panic!("problem with the input file : {error}"),
+    };
+
     let chunks: Vec<&[u8]> = data.chunks(cli.chunk_size).collect();
     let mut res: Vec<u8> = Vec::new();
 
     match cli.mode {
         Mode::Singlethreaded => {
-            // let mut reader = input_output::open_file_buffer(&cli.input, cli.io_chunk_size);
-            // let mut buffer = vec![0u8; cli.io_chunk_size];
-
             for chunk in chunks {
                 let mut comp_chunk = compress(&chunk);
                 res.append(&mut comp_chunk);
             }
-        },
+        }
         Mode::Multithreaded => {
             let comp_chunks = chunks
                 .par_iter()
                 .map(|chunk| compress(chunk))
                 .collect::<Vec<Vec<u8>>>();
 
-            for chunk in comp_chunks { res.extend(chunk); }
-        },
+            for chunk in comp_chunks {
+                res.extend(chunk);
+            }
+        }
         Mode::Decompress => {
             res = decompress(&data);
-        },
+        }
     }
 
-    input_output::output_to_file(&res, &cli.output);
+    output_to_file(&res, &cli.output);
+}
+
+pub fn output_to_file(bytes: &Vec<u8>, file_path: &str) {
+    let mut file = match File::create(file_path) { 
+        Ok(file) => file,
+        Err(error) => panic!("problem with the output file : {error:?}"),
+    };
+
+    file.write_all(bytes).unwrap();
 }

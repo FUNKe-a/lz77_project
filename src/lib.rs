@@ -1,11 +1,7 @@
 fn find_longest_match(data: &[u8], pos: usize) -> (u8, u8) {
     let mut best_offset = 0u8;
     let mut best_length = 0u8;
-    let start = if pos > 255 {
-        pos - 255
-    } else {
-        0
-    };
+    let start = if pos > 255 { pos - 255 } else { 0 };
 
     for offset in start..pos {
         let len = matcher(data, offset, pos);
