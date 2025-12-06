@@ -5,15 +5,23 @@ use std::fs::{self, File};
 use std::io::Write;
 
 #[derive(Parser)]
-#[command(version, about, long_about = None)]
+#[command(version, about = "A program for compressing and decompressing files using the LZ77 algorithm\nSinglethreaded - compresses the input file using a single thread\nmultithreaded  - compresses the input file using multiple threads\ndecompress     - decompresses the given input file\n", long_about = None)]
 struct Cli {
     #[arg(value_enum)]
     mode: Mode,
-    #[arg(short, long)]
+    #[arg(
+        short,
+        long,
+        help = "path to a file that the program uses for storing output"
+    )]
     output: String,
-    #[arg(short, long)]
+    #[arg(
+        short,
+        long,
+        help = "path to a file that the program reads data from"
+    )]
     input: String,
-    #[arg(short, long, default_value_t = 64 * 1024)]
+    #[arg(short, long, default_value_t = 64 * 1024, help="size of data chunks in bytes for file processing")]
     chunk_size: usize,
 }
 
@@ -61,7 +69,7 @@ fn main() {
 }
 
 pub fn output_to_file(bytes: &Vec<u8>, file_path: &str) {
-    let mut file = match File::create(file_path) { 
+    let mut file = match File::create(file_path) {
         Ok(file) => file,
         Err(error) => panic!("problem with the output file : {error:?}"),
     };
