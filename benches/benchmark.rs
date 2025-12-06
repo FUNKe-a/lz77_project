@@ -1,5 +1,5 @@
 use criterion::{BatchSize, Criterion, criterion_group, criterion_main};
-use inzinerinis_projektas::compress;
+use lz77_project::compress;
 use rayon::prelude::*;
 use std::hint::black_box;
 use std::{env, fs};
